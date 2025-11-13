@@ -6,7 +6,6 @@ services:
   - type: cron
     name: x-agent-orchestrator
     runtime: python
-    plan: free  # Use free tier
 
     # Schedule: Run every hour
     # The orchestrator decides internally if it's time to post
@@ -52,12 +51,3 @@ services:
     # Auto-deploy settings
     autoDeploy: true
     branch: main  # Deploy from main branch
-
-    # Health check settings
-    healthCheckPath: /
-
-    # Persistent disk for state and databases
-    disk:
-      name: orchestrator-data
-      mountPath: /opt/render/project/src/Agentos/orchestrator_db
-      sizeGB: 1

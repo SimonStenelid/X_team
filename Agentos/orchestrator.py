@@ -41,8 +41,8 @@ class OrchestratorAgent:
 
     def __init__(
         self,
-        db_dir: str = "/Users/simonstenelid/Desktop/X_team/Agentos/orchestrator_db",
-        log_dir: str = "/Users/simonstenelid/Desktop/X_team/Agentos/logs",
+        db_dir: str = None,
+        log_dir: str = None,
         dry_run: bool = False
     ):
         """
@@ -55,7 +55,14 @@ class OrchestratorAgent:
         """
         load_dotenv()
 
-        # Directories
+        # Directories - auto-detect based on environment
+        script_dir = Path(__file__).parent
+        if db_dir is None:
+            # Use relative path from script location (works on Render)
+            db_dir = script_dir / "orchestrator_db"
+        if log_dir is None:
+            log_dir = script_dir / "logs"
+
         self.db_dir = Path(db_dir)
         self.log_dir = Path(log_dir)
         self.db_dir.mkdir(parents=True, exist_ok=True)
@@ -64,7 +71,7 @@ class OrchestratorAgent:
         # Database files
         self.state_file = self.db_dir / "orchestrator_state.json"
         self.posts_db_file = self.db_dir / "posts_database.json"
-        self.backup_content_file = Path("/Users/simonstenelid/Desktop/X_team/Agentos/backup_content.json")
+        self.backup_content_file = script_dir / "backup_content.json"
 
         # Configuration
         self.dry_run = dry_run

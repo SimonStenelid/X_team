@@ -115,19 +115,6 @@ In Render dashboard → Your service → Environment tab:
 
 ---
 
-## 💾 Persistent Storage
-
-### Configure Disk
-- [ ] Go to "Disks" tab
-- [ ] Click "Add Disk"
-- [ ] Name: `orchestrator-data`
-- [ ] Mount Path: `/opt/render/project/src/Agentos/orchestrator_db`
-- [ ] Size: 1 GB
-- [ ] Click "Create Disk"
-- [ ] Disk status: "Attached"
-
----
-
 ## 🚀 Deploy
 
 ### First Deployment

@@ -106,17 +106,15 @@ WAVESPEED_API_KEY=your-wavespeed-key
 
 ---
 
-### Step 4: Configure Persistent Storage
+### Step 4: Verify Configuration
 
-1. **Go to your cron job service**
-2. Click **"Disks"** tab
-3. Click **"Add Disk"**:
-   - **Name:** `orchestrator-data`
-   - **Mount Path:** `/opt/render/project/src/Agentos/orchestrator_db`
-   - **Size:** 1 GB (free tier)
-4. Click **"Save"**
+Your cron job is now configured! Render will:
+- Run every hour automatically
+- Persist state between runs (in the project directory)
+- Install dependencies on each deploy
+- Execute `render_job.py` on schedule
 
-This ensures your state and posts database persist between runs.
+**Note:** Render cron jobs automatically persist files in the project directory between runs, so your state and database files will be saved.
 
 ---
 
