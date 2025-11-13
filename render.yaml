@@ -1,0 +1,63 @@
+# Render.com Blueprint Configuration
+# This file configures automatic deployment of the X Agent Team orchestrator
+
+services:
+  # Cron Job - Runs orchestrator once per hour (posts when scheduled)
+  - type: cron
+    name: x-agent-orchestrator
+    runtime: python
+    plan: free  # Use free tier
+
+    # Schedule: Run every hour
+    # The orchestrator decides internally if it's time to post
+    schedule: "0 * * * *"  # Every hour at minute 0
+
+    # Command to run
+    buildCommand: pip install -r requirements.txt
+    startCommand: python render_job.py
+
+    # Environment variables (set these in Render dashboard)
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+
+      # OpenAI API Key (required)
+      - key: OPENAI_API_KEY
+        sync: false  # Set manually in dashboard
+
+      # X/Twitter API Keys (required)
+      - key: X_API_KEY
+        sync: false
+      - key: X_API_SECRET
+        sync: false
+      - key: X_ACCESS_TOKEN
+        sync: false
+      - key: X_ACCESS_TOKEN_SECRET
+        sync: false
+      - key: X_BEARER_TOKEN
+        sync: false
+
+      # Serper API Key (for news agent)
+      - key: SERPER_API_KEY
+        sync: false
+
+      # Apify API Key (for content curator)
+      - key: APIFY_API_KEY
+        sync: false
+
+      # WaveSpeed AI API Key (for image generator)
+      - key: WAVESPEED_API_KEY
+        sync: false
+
+    # Auto-deploy settings
+    autoDeploy: true
+    branch: main  # Deploy from main branch
+
+    # Health check settings
+    healthCheckPath: /
+
+    # Persistent disk for state and databases
+    disk:
+      name: orchestrator-data
+      mountPath: /opt/render/project/src/Agentos/orchestrator_db
+      sizeGB: 1

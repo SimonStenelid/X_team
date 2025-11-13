@@ -1,0 +1,11 @@
+# Core dependencies for X Agent Team
+openai==2.7.2
+openai-agents==0.5.0
+python-dotenv==1.2.1
+tweepy==4.16.0
+apify-client==2.3.0
+pytz==2025.2
+requests==2.32.5
+
+# Additional dependencies
+requests-oauthlib==2.0.0

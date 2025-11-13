@@ -1,0 +1,15 @@
+[project]
+name = "x-agent-team"
+version = "0.1.0"
+description = "Automated X posting system with AI agents orchestration"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "openai>=2.7.2",
+    "openai-agents>=0.5.0",
+    "python-dotenv>=1.2.1",
+    "tweepy>=4.16.0",
+    "apify-client>=2.0.0",
+    "pytz>=2024.1",
+    "requests>=2.31.0",
+]

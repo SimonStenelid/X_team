@@ -1,0 +1,43 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+venv/
+env/
+
+# Environment variables (NEVER commit API keys!)
+.env
+.env.local
+.env.production
+
+# Databases and state (managed by Render persistent disk)
+Agentos/orchestrator_db/
+Agentos/curated_db/
+
+# Logs
+Agentos/logs/
+*.log
+
+# Generated media
+Agentos/images/
+Agentos/curated_media/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test files (keep in repo but ignored for production)
+# test_*.py files are kept for reference
