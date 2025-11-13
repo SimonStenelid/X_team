@@ -9,8 +9,10 @@ This agent uses the OpenAI Agents SDK with Serper MCP integration to:
 """
 
 import os
+import sys
 import asyncio
 from datetime import datetime
+from pathlib import Path
 from dotenv import load_dotenv
 from agents import Agent, Runner
 from agents.mcp import MCPServerStdio
@@ -37,6 +39,20 @@ class NewsHunterAgent:
         if not self.openai_api_key:
             raise ValueError("OPENAI_API_KEY not found in environment")
 
+        # Detect serper-mcp-server path dynamically
+        # First try: same directory as Python executable (virtual environment)
+        python_dir = Path(sys.executable).parent
+        self.serper_server_path = python_dir / "serper-mcp-server"
+
+        # If not found, try global installation
+        if not self.serper_server_path.exists():
+            import shutil
+            global_path = shutil.which("serper-mcp-server")
+            if global_path:
+                self.serper_server_path = Path(global_path)
+            else:
+                raise ValueError("serper-mcp-server not found. Install with: pip install serper-mcp-server")
+
     async def search_and_generate(self):
         """
         Search for viral AI news and generate an X post.
@@ -47,7 +63,7 @@ class NewsHunterAgent:
         async with MCPServerStdio(
             name="Serper Search",
             params={
-                "command": "/Users/simonstenelid/Desktop/X_team/.venv/bin/serper-mcp-server",
+                "command": str(self.serper_server_path),
                 "args": [],
                 "env": {
                     "SERPER_API_KEY": self.serper_api_key

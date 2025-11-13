@@ -21,7 +21,7 @@ from agents import Agent, Runner
 class ImageGeneratorAgent:
     """Agent that generates viral-worthy AI-themed images using Midjourney."""
 
-    def __init__(self, model: str = "gpt-5-mini", images_dir: str = "/Users/simonstenelid/Desktop/X_team/Agentos/images"):
+    def __init__(self, model: str = "gpt-5-mini", images_dir: str = None):
         """
         Initialize the Image Generator agent with API keys and configuration.
 
@@ -34,6 +34,11 @@ class ImageGeneratorAgent:
         self.wavespeed_api_key = os.getenv("WAVESPEED_API_KEY")
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
         self.model = model
+
+        # Use relative path from script location (works everywhere)
+        if images_dir is None:
+            script_dir = Path(__file__).parent
+            images_dir = script_dir / "images"
         self.images_dir = Path(images_dir)
 
         if not self.wavespeed_api_key:

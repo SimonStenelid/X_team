@@ -291,7 +291,7 @@ class OrchestratorAgent:
         now = datetime.now(self.timezone)
 
         # If next_post_scheduled is set, check if we've reached that time
-        if state["next_post_scheduled"]:
+        if state.get("next_post_scheduled"):
             scheduled_time = datetime.fromisoformat(state["next_post_scheduled"])
             if scheduled_time.tzinfo is None:
                 scheduled_time = self.timezone.localize(scheduled_time)
@@ -304,7 +304,7 @@ class OrchestratorAgent:
                 return False
 
         # If no schedule set, check if we posted today
-        if state["last_post_time"]:
+        if state.get("last_post_time"):
             last_post = datetime.fromisoformat(state["last_post_time"])
             if last_post.tzinfo is None:
                 last_post = self.timezone.localize(last_post)
@@ -320,8 +320,8 @@ class OrchestratorAgent:
                 logging.info(f"Too soon since last post ({hours_since_last:.1f} hours)")
                 return False
 
-        # Ready to post
-        logging.info("Ready to post")
+        # No schedule and either no posts yet OR 20+ hours passed - ready to post
+        logging.info("Ready to post (no schedule set or first post)")
         return True
 
     def select_content_type(self, state: Dict) -> str:

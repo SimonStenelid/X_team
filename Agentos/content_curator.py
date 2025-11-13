@@ -35,8 +35,8 @@ class ContentCuratorAgent:
     def __init__(
         self,
         model: str = "gpt-4o",
-        media_dir: str = "/Users/simonstenelid/Desktop/X_team/Agentos/curated_media",
-        db_dir: str = "/Users/simonstenelid/Desktop/X_team/Agentos/curated_db"
+        media_dir: str = None,
+        db_dir: str = None
     ):
         """
         Initialize the Content Curator agent with API keys and configuration.
@@ -59,6 +59,13 @@ class ContentCuratorAgent:
 
         # Initialize Apify client
         self.apify_client = ApifyClient(self.apify_api_key)
+
+        # Use relative paths from script location (works everywhere)
+        script_dir = Path(__file__).parent
+        if media_dir is None:
+            media_dir = script_dir / "curated_media"
+        if db_dir is None:
+            db_dir = script_dir / "curated_db"
 
         # Create directories
         self.media_dir = Path(media_dir)

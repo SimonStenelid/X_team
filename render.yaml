@@ -2,18 +2,21 @@
 # This file configures automatic deployment of the X Agent Team orchestrator
 
 services:
-  # Cron Job - Runs orchestrator once per hour (posts when scheduled)
-  - type: cron
+  # Background Worker - Runs continuously and checks schedule hourly
+  # Uses persistent disk to maintain state between runs
+  - type: worker
     name: x-agent-orchestrator
     runtime: python
 
-    # Schedule: Run every hour
-    # The orchestrator decides internally if it's time to post
-    schedule: "0 * * * *"  # Every hour at minute 0
-
     # Command to run
     buildCommand: pip install -r requirements.txt
-    startCommand: python render_job.py
+    startCommand: python render_worker.py
+
+    # Persistent disk for state and database files
+    disk:
+      name: orchestrator-data
+      mountPath: /opt/render/project/src/Agentos/orchestrator_db
+      sizeGB: 1
 
     # Environment variables (set these in Render dashboard)
     envVars:

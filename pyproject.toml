@@ -12,4 +12,5 @@ dependencies = [
     "apify-client>=2.0.0",
     "pytz>=2024.1",
     "requests>=2.31.0",
+    "serper-mcp-server>=0.0.10",
 ]
