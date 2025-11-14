@@ -5,7 +5,7 @@ This agent uses the OpenAI Agents SDK with Serper MCP integration to:
 1. Search for the latest AI news, trends, and updates
 2. Focus on AI agents and automation news
 3. Select the most viral-worthy news item
-4. Generate professional, tech-focused X posts
+4. Generate professional, tech-focused X posts with source URL
 """
 
 import os
@@ -98,17 +98,19 @@ class NewsHunterAgent:
 
                 3. Create ONE X post (max 280 characters) about this story:
                    - Professional but engaging tone
-                   - Tech-focused, not humorous, but not too serious 
+                   - Tech-focused, not humorous, but not too serious
                    - Include key insight or takeaway
+                   - MUST include the news article URL at the end
                    - Keep it concise and impactful
-                   - Style and laguage should follow the typical non serious but viral-making X posting style and language
+                   - Style and language should follow the typical non serious but viral-making X posting style and language
+                   - Format: [Your commentary text]\n\n[URL]
                 """,
                 mcp_servers=[serper_server],
             )
 
             result = await Runner.run(
                 agent,
-                "Find the most viral and recent AI news about AI agents or automation, then create ONE professional X post about it (MUST BE UNDER 280 CHARACTERS). Use google_search_news to search. Return ONLY the X post text, nothing else."
+                "Find the most viral and recent AI news about AI agents or automation, then create ONE professional X post about it (MUST BE UNDER 280 CHARACTERS INCLUDING THE URL). IMPORTANT: You MUST include the news article URL at the end of the post. Use google_search_news to search. Return ONLY the X post text with URL, nothing else."
             )
 
             return result.final_output
