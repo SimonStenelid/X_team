@@ -4,13 +4,15 @@ Content Curator Agent - Finds viral AI posts on X, downloads media, and generate
 This agent uses:
 1. Apify Twitter Scraper to find viral AI content (150 tweets/run on free tier)
 2. OpenAI Agents SDK (GPT-4o) to generate Min Choi style commentary
-3. gallery-dl for reliable video/media downloads from X/Twitter (preferred method)
-4. Requests library to download videos/images as fallback (when direct URLs available)
-5. JSON database to track reposted content and avoid duplicates
+3. yt-dlp for reliable video/media downloads from X/Twitter (primary method)
+4. gallery-dl as secondary fallback (when configured with authentication)
+5. Requests library to download videos/images as tertiary fallback
+6. JSON database to track reposted content and avoid duplicates
 
 Download Strategy:
-- Primary: gallery-dl (handles X authentication, highest quality)
-- Fallback: Direct URL download from Apify data
+- Primary: yt-dlp (best for Render deployment, no auth needed, highly reliable)
+- Secondary: gallery-dl (requires X auth config, highest quality when configured)
+- Tertiary: Direct URL download from Apify data
 - Last resort: Manual download notification with tweet URL
 """
 
@@ -274,6 +276,80 @@ class ContentCuratorAgent:
 
         return filtered
 
+    def _download_with_ytdlp(self, tweet_url: str, tweet_id: str) -> Optional[str]:
+        """
+        Download media using yt-dlp (preferred method for Render deployment).
+
+        Args:
+            tweet_url: Full URL to the tweet
+            tweet_id: Tweet ID for filename
+
+        Returns:
+            Local file path if successful, None otherwise
+        """
+        if not shutil.which("yt-dlp"):
+            print("  ⚠️  yt-dlp not found in PATH, falling back to next method")
+            return None
+
+        print(f"  Using yt-dlp to download from: {tweet_url}")
+
+        try:
+            # Prepare output template
+            output_template = str(self.media_dir / f"{tweet_id}.%(ext)s")
+
+            cmd = [
+                "yt-dlp",
+                "--no-playlist",  # Only download single video
+                "--no-warnings",  # Suppress warnings
+                "--quiet",  # Quiet mode
+                "--no-progress",  # No progress bar
+                "-o", output_template,  # Output template
+                "--format", "best",  # Best quality
+                "--no-check-certificate",  # Skip SSL verification if needed
+                "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                tweet_url
+            ]
+
+            print(f"  Running: yt-dlp {tweet_url}")
+
+            # Run yt-dlp with timeout
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=self.config['download_timeout']
+            )
+
+            if result.returncode == 0:
+                # Find the downloaded file
+                downloaded_files = list(self.media_dir.glob(f"{tweet_id}.*"))
+
+                if downloaded_files:
+                    # Filter for actual media files
+                    media_files = [f for f in downloaded_files if f.is_file() and f.suffix in ['.mp4', '.jpg', '.png', '.gif', '.webm', '.m4a']]
+
+                    if media_files:
+                        target_file = media_files[0]
+                        file_size = target_file.stat().st_size / (1024 * 1024)
+                        print(f"  ✅ Successfully downloaded via yt-dlp: {target_file.name} ({file_size:.2f} MB)")
+                        return str(target_file)
+
+                print(f"  ⚠️  yt-dlp completed but no media file found")
+                return None
+
+            else:
+                print(f"  ⚠️  yt-dlp failed with code {result.returncode}")
+                if result.stderr:
+                    print(f"  Error: {result.stderr[:200]}")
+                return None
+
+        except subprocess.TimeoutExpired:
+            print(f"  ⚠️  yt-dlp timed out after {self.config['download_timeout']}s")
+            return None
+        except Exception as e:
+            print(f"  ⚠️  yt-dlp error: {e}")
+            return None
+
     def _download_with_gallery_dl(self, tweet_url: str, tweet_id: str) -> Optional[str]:
         """
         Download media using gallery-dl (preferred method).
@@ -440,9 +516,10 @@ class ContentCuratorAgent:
         Download media from a tweet using multiple strategies.
 
         Strategy order:
-        1. gallery-dl (if enabled) - Most reliable for X/Twitter videos
-        2. Direct download from Apify URLs (fallback)
-        3. Manual download notification (if all else fails)
+        1. yt-dlp (primary) - Best for Render deployment, no auth needed
+        2. gallery-dl (secondary) - Works if configured with auth
+        3. Direct download from Apify URLs (fallback)
+        4. Manual download notification (if all else fails)
 
         Args:
             tweet: Tweet data containing media URLs and tweet URL
@@ -455,19 +532,26 @@ class ContentCuratorAgent:
 
         print(f"\nAttempting to download media for tweet {tweet_id}...")
 
-        # Strategy 1: Try gallery-dl first (preferred)
+        # Strategy 1: Try yt-dlp first (preferred for Render)
+        if tweet_url:
+            media_path = self._download_with_ytdlp(tweet_url, str(tweet_id))
+            if media_path:
+                return media_path
+            print(f"  yt-dlp failed, trying gallery-dl...")
+
+        # Strategy 2: Try gallery-dl (if enabled and has auth)
         if self.config.get('use_gallery_dl', True) and tweet_url:
             media_path = self._download_with_gallery_dl(tweet_url, str(tweet_id))
             if media_path:
                 return media_path
             print(f"  gallery-dl failed, trying direct download...")
 
-        # Strategy 2: Try direct download from Apify URLs
+        # Strategy 3: Try direct download from Apify URLs
         media_path = self._download_direct(tweet)
         if media_path:
             return media_path
 
-        # Strategy 3: All automated methods failed
+        # Strategy 4: All automated methods failed
         print(f"  ⚠️  All automated download methods failed")
         print(f"  Tweet URL: {tweet_url if tweet_url else 'N/A'}")
         print(f"  You can manually download media from the tweet URL")

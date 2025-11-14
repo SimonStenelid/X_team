@@ -12,3 +12,4 @@ serper-mcp-server>=0.0.10
 
 # Additional dependencies
 requests-oauthlib==2.0.0
+yt-dlp>=2024.12.0

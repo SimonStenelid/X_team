@@ -10,7 +10,7 @@ import asyncio
 import sys
 import time
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Add Agentos to path
 sys.path.insert(0, str(Path(__file__).parent / "Agentos"))
@@ -26,7 +26,15 @@ async def run_orchestrator():
         print("="*60 + "\n")
 
         # Initialize orchestrator in production mode
-        orchestrator = OrchestratorAgent(dry_run=False)
+        # Use persistent disk path if on Render
+        db_dir = "/opt/render/project/src/data" if Path("/opt/render").exists() else None
+        orchestrator = OrchestratorAgent(dry_run=False, db_dir=db_dir)
+
+        # Print state info for debugging
+        state = orchestrator.load_state()
+        print(f"DB Directory: {orchestrator.db_dir}")
+        print(f"Last post time: {state.get('last_post_time')}")
+        print(f"Next scheduled: {state.get('next_post_scheduled')}")
 
         # Run daily workflow (will check if it's time to post)
         await orchestrator.run_daily()
@@ -48,6 +56,17 @@ async def main():
     print("\n" + "="*60)
     print("RENDER BACKGROUND WORKER STARTING")
     print("Checking for posts every hour...")
+    print(f"Working directory: {Path.cwd()}")
+    print(f"Script location: {Path(__file__).parent}")
+
+    # Check if persistent disk is available
+    if Path("/opt/render").exists():
+        print(f"Render environment detected - using persistent disk")
+        data_path = Path("/opt/render/project/src/data")
+        print(f"Persistent disk path: {data_path}")
+        print(f"Persistent disk exists: {data_path.exists()}")
+        if data_path.exists():
+            print(f"Files in persistent disk: {list(data_path.iterdir())}")
     print("="*60 + "\n")
 
     while True:
@@ -56,7 +75,8 @@ async def main():
             await run_orchestrator()
 
             # Wait 1 hour before next check (3600 seconds)
-            print(f"\nSleeping for 1 hour... Next check at {datetime.now().replace(hour=(datetime.now().hour + 1) % 24, minute=0, second=0).strftime('%Y-%m-%d %H:%M:%S')}")
+            next_check = datetime.now() + timedelta(hours=1)
+            print(f"\n💤 Sleeping for 1 hour... Next check at {next_check.strftime('%Y-%m-%d %H:%M:%S')}")
             await asyncio.sleep(3600)
 
         except KeyboardInterrupt:
